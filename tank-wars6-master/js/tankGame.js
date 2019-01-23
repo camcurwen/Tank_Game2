@@ -20,13 +20,13 @@ var config = {
 };
 var game = new Phaser.Game(config);
 //New bit
-var player, enemyTanks = [], maxEnemies = 6, bullets, enemyBullets, bossEnemyTanks = [], maxBossEnemies = 2, bossEnemyBullets;
+var player, enemyTanks = [], maxEnemies = 2, bullets, enemyBullets, bossEnemyTanks = [], maxBossEnemies = 2, bossEnemyBullets;
 function preload() {
 
     this.load.atlas('tank', 'assets/tanks/tanks.png', 'assets/tanks/tanks.json');
     //New bit
     this.load.atlas('enemy', 'assets/tanks/enemy-tanks.png', 'assets/tanks/tanks.json');
-    this.load.atlas('bossEnemy', 'assets/tanks/bossEnemy-tanks.png', 'assets/tanks/bosstanks.fw');
+    this.load.atlas('bossEnemy', 'assets/tanks/bosstank2.fw.png', 'assets/tanks/bosstank2.fw.json');
 
     this.load.image('earth', 'assets/tanks/scorched_earth.png');
 
@@ -82,7 +82,7 @@ function create() {
     var bossEnemyTank, loc;
     for (var i = 0; i < maxBossEnemies; i++) {
         loc = Phaser.Geom.Rectangle.RandomOutside(outerFrame, innerFrame)
-        bossEnemyTank = new bossEnemyTank(this, loc.x, loc.y, 'bossEnemy', 'tank2', player);
+        bossEnemyTank = new BossEnemyTank(this, loc.x, loc.y, 'bossEnemy', 'tank2', player);
         bossEnemyTank.enableCollision(destructLayer);
         bossEnemyTank.setBullets(bossEnemyBullets);
         bossEnemyTanks.push(bossEnemyTank);
@@ -100,7 +100,7 @@ function create() {
     explosions = this.physics.add.group({
         defaultkey: 'explosion',
         //New bit
-        maxsize: 'maxEnemies', 'maxBossEnemys'
+        maxsize: maxEnemies + maxBossEnemies
     })
     this.anims.create({
         key: 'explode',
@@ -115,22 +115,23 @@ function create() {
 function update(time, delta) {
     player.update();
     //New bit
-        for (var i = 0; i < enemyTanks.length, bossEnemyTank.length; i++) {
+    for (var i = 0; i < enemyTanks.length; i++) {
         enemyTanks[i].update(time, delta);
+    }
+
+    for (var i = 0; i < bossEnemyTanks.length; i++) {
         bossEnemyTanks[i].update(time, delta);
-     }
+    }
 }
 function tryShoot(pointer) {
     var bullet = bullets.get(player.turret.x, player.turret.y);
     if (bullet) {
-        fireBullet.call(this, bullet, player.turret.rotation, enemyTanks);
+        fireBullet.call(this, bullet, player.turret.rotation, null);
     }   //New bit
-    if (bullet) {
-        fireBullet.call(this, bullet, player.turret.rotation, bossEnemyTanks);
-    }
+    
 }
 function fireBullet(bullet, rotation, target) {
-    bullet.setDepth(3); 
+    bullet.setDepth(3);
     bullet.body.collideWorldBounds = true;
     bullet.body.onWorldBounds = true;
     bullet.enableBody(false);
@@ -147,20 +148,21 @@ function fireBullet(bullet, rotation, target) {
     } else {
         for (var i = 0; i < enemyTanks.length; i++) {
             this.physics.add.overlap(enemyTanks[i].hull, bullet, bulletHitEnemy, null, this);
-        }
+        } 
+        for (var i = 0; i < bossEnemyTanks.length; i++) {
+            this.physics.add.overlap(bossEnemyTanks[i].hull, bullet, bulletHitBossEnemy, null, this);
+        } 
     }//New bit
-    else {
-        for (var i = 0; i < BossEnemyTank[i].hull, bullet, bulletHitBossEnemy, null, this); 
-    }
+    
 }
 function bulletHitPlayer(hull, bullet) {
     killBullet(bullet);
     player.damage();
-    if (player.isDetroyed()) {
+    if (player.isDestroyed()) {
         this.input.enabled = false;
         //New bit
         enemyTanks = [];
-        BossEnemyTank = [];  
+        BossEnemyTank = [];
         this.physics.pause();
         var explosion = explosions.get(hull.x, hull.y);
         if (explosion) {
@@ -192,33 +194,23 @@ function bulletHitEnemy(hull, bullet) {
             break;
         }
     }
+   // console.log('enemy='+enemy )
     killBullet(bullet);
-    enemy.damage();
+     enemy.damage(); 
+    var explosion = explosions.get(hull.x, hull.y);
+     if (explosion) {
+       activateExplosion(explosion);
+       explosion.on('animationcomplete', animComplete, this);
+       explosion.play('explode');
+      }
 
 
-
-
-    //FIX below!!!!!!!
-
-
-   // var explosion = explosions.get(hull.x, hull.y);
-   // if (explosion) {
-     //   activateExplosion(explosion);
-       // explosion.on('animationcomplete', animComplete, this);
-       // explosion.play('explosion');
-    }
-    
-
-    // FIX Above
-
-
-
-
-
-    if (enemy.isDetroyed()) {
+    if (enemy.isDestroyed()) {
         // remove from enemyTanks list
         enemyTanks.splice(index, 1);
-}   //New bit
+    }   //New bit
+
+}
 function bulletHitBossEnemy(hull, bullet) {
     var bossEnemy;
     var index;
@@ -231,15 +223,15 @@ function bulletHitBossEnemy(hull, bullet) {
     }
     killBullet(bullet);
     bossEnemy.damage();
-    if (enemy.isDetroyed()) {
+    if (bossEnemy.isDestroyed()) {
         // remove from enemyTanks list
-        enemyTanks.splice(index, 1);
+        bossEnemyTanks.splice(index, 1);
     }
 }
 
 //TODO
 function animComplete(animation, frame, gameObject) {
-    gameObject.disable.body(true, true);
+    gameObject.disableBody(true, true);
 }
 
 

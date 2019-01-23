@@ -76,51 +76,52 @@ class EnemyTank extends BaseTank {
             // disable / visual damage
             this.burn();
         }
-    } //New bit
+    }
+}               //New bit
      // bosstank 
     class BossEnemyTank extends BaseTank {
-    constructor(scene, x, y, texture, frame, player) {
-        super(scene, x, y, texture, frame);
-        this.player = player;
-        this.hull.angle = Phaser.Math.RND.angle();
-        this.scene.physics.velocityFromRotation(this.hull.rotation, 100, this.hull.body.velocity);
-        this.fireTime = 5;
-    }
-    update(time, delta) {
-        super.update();
-        this.turret.rotation = Phaser.Math.Angle.Between(this.hull.x, this.hull.y, this.player.hull.x, this.player.hull.y);
-        this.shadow.rotation = this.hull.rotation = Math.atan2(this.hull.body.velocity.y, this.hull.body.velocity.x);
-        if (this.damageCount <= this.damageMax - 2 && Phaser.Math.Distance.Between(this.hull.x, this.hull.y, this.player.hull.x, this.player.hull.y) < 300 && this.fireTime == 0) {
-            // within Range
-            this.fireTime = time;
-            var bullet = this.bullets.get(this.turret.x, this.turret.y);
-            if (bullet) {
-                fireBullet.call(this.scene, bullet, this.turret.rotation, this.player);
-            }
+        constructor(scene, x, y, texture, frame, player) {
+            super(scene, x, y, texture, frame);
+            this.player = player;
+            this.hull.angle = Phaser.Math.RND.angle();
+            this.scene.physics.velocityFromRotation(this.hull.rotation, 100, this.hull.body.velocity);
+            this.fireTime = 5;
         }
-        if (this.fireTime > 0) {
-            if (time > this.fireTime + 2000) {
-                this.fireTime = 0;
+        update(time, delta) {
+            super.update();
+            this.turret.rotation = Phaser.Math.Angle.Between(this.hull.x, this.hull.y, this.player.hull.x, this.player.hull.y);
+            this.shadow.rotation = this.hull.rotation = Math.atan2(this.hull.body.velocity.y, this.hull.body.velocity.x);
+            if (this.damageCount <= this.damageMax - 2 && Phaser.Math.Distance.Between(this.hull.x, this.hull.y, this.player.hull.x, this.player.hull.y) < 300 && this.fireTime == 0) {
+                // within Range
+                this.fireTime = time;
+                var bullet = this.bullets.get(this.turret.x, this.turret.y);
+                if (bullet) {
+                    fireBullet.call(this.scene, bullet, this.turret.rotation, this.player);
+                }
             }
-        }
+            if (this.fireTime > 0) {
+                if (time > this.fireTime + 2000) {
+                    this.fireTime = 0;
+                }
+            }
 
-    }
-    damage() {
-        this.damageCount++;
-        if (this.damageCount >= this.damageMax) {
-            // destroy
-            this.turret.destroy();
-            this.hull.destroy();
-        } else if (this.damageCount == this.damageMax - 1) {
-            // disable / visual damage
-            this.burn();
         }
-    }
+        damage() {
+            this.damageCount++;
+            if (this.damageCount >= this.damageMax) {
+                // destroy
+                this.turret.destroy();
+                this.hull.destroy();
+            } else if (this.damageCount == this.damageMax - 1) {
+                // disable / visual damage
+                this.burn();
+            }
+        }
 
 }
 
 
-}
+
 class PlayerTank extends BaseTank {
     constructor(scene, x, y, texture, frame) {
         super(scene, x, y, texture, frame)
